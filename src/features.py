@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 DATA_PATH = "data/hackathon_preli_dataset.xlsx"
 HORIZONS = (2, 3, 4)   # how many weeks ahead we want to predict
@@ -30,8 +31,17 @@ def build_features(df):
     out["hum_now"] = df["relative_humidity_pct"]
     out["hum_mean_4w"] = g["relative_humidity_pct"].transform(lambda s: s.rolling(4).mean())
 
+        # 5. Season: sine/cosine so that week 52 and week 1 count as neighbours
+    week = df["date"].dt.isocalendar().week.astype(int).clip(upper=52)
+    out["woy_sin"] = np.sin(2 * np.pi * week / 52)
+    out["woy_cos"] = np.cos(2 * np.pi * week / 52)
+
     # 4. Targets: cases 2, 3, 4 weeks IN THE FUTURE (negative shift = look forward)
     for h in HORIZONS:
         out[f"y_h{h}"] = g["dengue_cases"].shift(-h)
 
     return out
+
+def feature_columns(frame):
+    skip = {"ward_id", "city", "date"}
+    return [c for c in frame.columns if c not in skip and not c.startswith("y_h")]
