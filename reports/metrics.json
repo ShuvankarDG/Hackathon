@@ -1,0 +1,193 @@
+{
+  "split": {
+    "train_end": "2022-12-31",
+    "val_end": "2023-12-31",
+    "refit_all": false
+  },
+  "variants": {
+    "weather_only": {
+      "h2": {
+        "model": {
+          "MAE": 1.0223680920558893,
+          "RMSE": 2.0197331739451374
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2675980505470796,
+          "RMSE": 2.4608269302747843
+        },
+        "interval_80_coverage": 0.9593851132686084,
+        "tiers": {
+          "tier_accuracy": 0.7872168284789643,
+          "within_one_tier": 0.9948220064724919,
+          "critical_recall": 0.21212121212121213,
+          "critical_or_high_recall_on_critical": 0.9393939393939394,
+          "critical_precision": 0.39622641509433965,
+          "alert_recall_high_or_above": 0.7120181405895691,
+          "alert_precision_high_or_above": 0.6759956942949408
+        },
+        "n_test_rows": 6180,
+        "n_estimators": 366
+      },
+      "h3": {
+        "model": {
+          "MAE": 1.0368785793996602,
+          "RMSE": 1.9987547122544616
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2800867569249923,
+          "RMSE": 2.4728663004818894
+        },
+        "interval_80_coverage": 0.9531045751633986,
+        "tiers": {
+          "tier_accuracy": 0.7781045751633987,
+          "within_one_tier": 0.9952614379084967,
+          "critical_recall": 0.25757575757575757,
+          "critical_or_high_recall_on_critical": 0.9242424242424242,
+          "critical_precision": 0.4636363636363636,
+          "alert_recall_high_or_above": 0.7086167800453514,
+          "alert_precision_high_or_above": 0.6727664155005382
+        },
+        "n_test_rows": 6120,
+        "n_estimators": 360
+      },
+      "h4": {
+        "model": {
+          "MAE": 1.2043341857562333,
+          "RMSE": 2.2955572374045587
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2922707449316362,
+          "RMSE": 2.485004495671106
+        },
+        "interval_80_coverage": 0.9523102310231023,
+        "tiers": {
+          "tier_accuracy": 0.7562706270627063,
+          "within_one_tier": 0.9912541254125412,
+          "critical_recall": 0.17676767676767677,
+          "critical_or_high_recall_on_critical": 0.8131313131313131,
+          "critical_precision": 0.4069767441860465,
+          "alert_recall_high_or_above": 0.7120181405895691,
+          "alert_precision_high_or_above": 0.5992366412213741
+        },
+        "n_test_rows": 6060,
+        "n_estimators": 274
+      }
+    },
+    "weather_plus_cases": {
+      "h2": {
+        "model": {
+          "MAE": 1.0272698880897553,
+          "RMSE": 2.034905432951552
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2675980505470796,
+          "RMSE": 2.4608269302747843
+        },
+        "interval_80_coverage": 0.9571197411003236,
+        "tiers": {
+          "tier_accuracy": 0.7844660194174757,
+          "within_one_tier": 0.9941747572815534,
+          "critical_recall": 0.2222222222222222,
+          "critical_or_high_recall_on_critical": 0.9292929292929293,
+          "critical_precision": 0.38596491228070173,
+          "alert_recall_high_or_above": 0.6984126984126984,
+          "alert_precision_high_or_above": 0.6724890829694323
+        },
+        "n_test_rows": 6180,
+        "n_estimators": 346,
+        "persistence_baseline": {
+          "MAE": 1.690938511326861,
+          "RMSE": 3.3280702786953396
+        }
+      },
+      "h3": {
+        "model": {
+          "MAE": 1.0352774995445027,
+          "RMSE": 2.000770935287737
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2800867569249923,
+          "RMSE": 2.4728663004818894
+        },
+        "interval_80_coverage": 0.9540849673202615,
+        "tiers": {
+          "tier_accuracy": 0.7777777777777778,
+          "within_one_tier": 0.9947712418300654,
+          "critical_recall": 0.24242424242424243,
+          "critical_or_high_recall_on_critical": 0.9141414141414141,
+          "critical_precision": 0.4752475247524752,
+          "alert_recall_high_or_above": 0.6938775510204082,
+          "alert_precision_high_or_above": 0.6695842450765864
+        },
+        "n_test_rows": 6120,
+        "n_estimators": 362,
+        "persistence_baseline": {
+          "MAE": 1.9238562091503268,
+          "RMSE": 3.6318309539998377
+        }
+      },
+      "h4": {
+        "model": {
+          "MAE": 1.2101999295470764,
+          "RMSE": 2.326970092489832
+        },
+        "seasonal_climatology_baseline": {
+          "MAE": 1.2922707449316362,
+          "RMSE": 2.485004495671106
+        },
+        "interval_80_coverage": 0.9508250825082508,
+        "tiers": {
+          "tier_accuracy": 0.7542904290429043,
+          "within_one_tier": 0.9905940594059406,
+          "critical_recall": 0.20202020202020202,
+          "critical_or_high_recall_on_critical": 0.8080808080808081,
+          "critical_precision": 0.38461538461538464,
+          "alert_recall_high_or_above": 0.6961451247165533,
+          "alert_precision_high_or_above": 0.6025515210991168
+        },
+        "n_test_rows": 6060,
+        "n_estimators": 392,
+        "persistence_baseline": {
+          "MAE": 2.1364686468646865,
+          "RMSE": 3.9243464487102755
+        }
+      }
+    }
+  },
+  "top_features_gain_h3": {
+    "weather_only": {
+      "rain_sum_2w": 712031.9730858803,
+      "rain_lag0": 186636.8886499405,
+      "woy_cos": 131956.69959020615,
+      "rain_x_waterlog_4w": 43867.75662136078,
+      "woy_sin": 38067.66909599304,
+      "hum_mean_4w": 21002.876974582672,
+      "tmin_mean_4w": 11786.387462615967,
+      "population_density_sqkm": 10899.779733657837,
+      "water_logging_risk_index": 9924.13066315651,
+      "temp_lag0": 7629.703608989716,
+      "rain_sum_8w": 6798.312691926956,
+      "temp_mean_4w": 6629.234516382217,
+      "rain_lag8": 6071.434563159943,
+      "rain_lag3": 4510.664798736572,
+      "sanitation_score": 4268.087139844894
+    },
+    "weather_plus_cases": {
+      "rain_sum_2w": 675639.0438508987,
+      "rain_lag0": 220322.85983753204,
+      "woy_cos": 131096.78443956375,
+      "rain_x_waterlog_4w": 51435.96952223778,
+      "woy_sin": 33193.46724700928,
+      "hum_mean_4w": 22877.477703094482,
+      "tmin_mean_4w": 15854.444653272629,
+      "population_density_sqkm": 10756.906309604645,
+      "water_logging_risk_index": 6218.98691534996,
+      "temp_lag0": 6144.929703712463,
+      "rain_lag8": 5897.172285318375,
+      "temp_mean_4w": 5411.607520580292,
+      "rain_lag3": 5322.663670063019,
+      "rain_sum_8w": 4891.726294517517,
+      "sanitation_score": 4238.788961172104
+    }
+  }
+}

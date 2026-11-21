@@ -1,63 +1,92 @@
+"""Fast local inference: serialized LightGBM models -> risk tier, score, band and weather drivers.
+
+    python -m src.predict --ward CCC_Ward_01 --date 2025-07-07
+"""
+from __future__ import annotations
+
+import argparse
 import functools
-import sys
 
 import joblib
+import numpy as np
 import pandas as pd
 
-from src import risk
-from src.features import load_data, build_features, HORIZONS
+from . import risk
+from .features import HORIZONS, ROOT, build_features, group_of, load_raw
+
+MODEL_PATH = ROOT / "models" / "dengue_models.joblib"
 
 
 @functools.lru_cache(maxsize=1)
-def _bundle():
-    return joblib.load("models/dengue_models.joblib")        # loaded once, not on every call
+def load_bundle() -> dict:
+    """Models are deserialised once per process (joblib), never retrained at request time."""
+    return joblib.load(MODEL_PATH)
 
 
-@functools.lru_cache(maxsize=1)
-def _features():
-    return build_features(load_data())                        # computed once, not on every call
+@functools.lru_cache(maxsize=2)
+def feature_table(variant: str) -> pd.DataFrame:
+    """Lag features for every ward-week, computed once per process and reused by all queries."""
+    return build_features(load_raw(), with_cases=variant == "weather_plus_cases")
 
 
-def forecast(ward, date):
-    b = _bundle()
-    f = _features()
-    row = f[(f.ward_id == ward) & (f.date == pd.Timestamp(date))]
-    if row.empty:
-        raise ValueError("Ward/date not found. Dates are Mondays, e.g. 2025-07-07")
-    X = row[b["features"]]
-    out = []
+def forecast_frame(feats: pd.DataFrame, variant: str = "weather_only") -> pd.DataFrame:
+    """Vectorised forecast for many origin rows -> one row per (origin row, horizon)."""
+    vb = load_bundle()["variants"][variant]
+    X = feats[vb["features"]]
+    rows = []
     for h in HORIZONS:
-        cases = float(b["models"][h].predict(X)[0])
-        out.append({
-            "target_week": (pd.Timestamp(date) + pd.Timedelta(weeks=h)).date(),
-            "lead_weeks": h,
-            "predicted_cases": round(cases, 1),
-            "risk": risk.tier_name(cases, b["cutoffs"]),
-        })
-    return pd.DataFrame(out)
+        m = vb["models"][h]
+        p = m["mean"].predict(X)
+        lo = np.minimum(m["q10"].predict(X), p)
+        hi = np.maximum(m["q90"].predict(X), p)
+        rows.append(pd.DataFrame({
+            "ward_id": feats["ward_id"].values, "city": feats["city"].values, "origin_date": feats["date"].values,
+            "horizon": h, "target_date": feats["date"].values + pd.to_timedelta(7 * h, unit="D"),
+            "pred_cases": p, "lo": lo, "hi": hi,
+            "tier": [risk.TIERS[i] for i in risk.tier_index(p, vb["cutoffs"])],
+            "risk_score": risk.score(p, vb["ecdf"]),
+        }))
+    return pd.concat(rows, ignore_index=True)
 
-def drivers(ward, date, lead):
-    """How much each group of inputs pushed the forecast up or down (log scale)."""
-    b = _bundle()
-    f = _features()
-    row = f[(f.ward_id == ward) & (f.date == pd.Timestamp(date))]
-    contrib = b["models"][lead].predict(row[b["features"]], pred_contrib=True)[0][:-1]
-    d = pd.DataFrame({"feature": b["features"], "effect": contrib})
 
-    def group(name):
-        if name.startswith("rain"):
-            return "Rainfall"
-        if name.startswith("temp"):
-            return "Temperature"
-        if name.startswith("hum"):
-            return "Humidity"
-        if name.startswith("woy"):
-            return "Season"
-        return "Ward profile"
+def drivers(feat_row: pd.DataFrame, horizon: int, variant: str = "weather_only") -> pd.DataFrame:
+    """Per-feature contributions (LightGBM native TreeSHAP, log-expected-cases scale), grouped into drivers."""
+    vb = load_bundle()["variants"][variant]
+    X = feat_row[vb["features"]]
+    c = vb["models"][horizon]["mean"].predict(X, pred_contrib=True)[0][:-1]
+    df = pd.DataFrame({"feature": vb["features"], "contribution": c, "value": X.iloc[0].values})
+    df["driver_group"] = df["feature"].map(group_of)
+    return df
 
-    d["group"] = d["feature"].map(group)
-    return d.groupby("group")["effect"].sum().sort_values()
+
+def whatif_row(raw: pd.DataFrame, ward: str, origin: pd.Timestamp, rain_mult: float = 1.0,
+               weeks: int = 4, variant: str = "weather_only") -> pd.DataFrame:
+    """Re-run the lag pipeline for ONE ward with the last `weeks` of rainfall scaled (scenario analysis)."""
+    w = raw[(raw.ward_id == ward) & (raw.date <= origin)].tail(24).copy()
+    w.iloc[-weeks:, w.columns.get_loc("rainfall_mm")] *= rain_mult
+    f = build_features(w, with_cases=variant == "weather_plus_cases")
+    return f.tail(1)
+
+
+def window_summary(fc: pd.DataFrame, variant: str = "weather_only") -> dict:
+    """Aggregate the 2-4 week window for one ward/origin: mean weekly cases -> tier."""
+    vb = load_bundle()["variants"][variant]
+    mean_cases = float(fc["pred_cases"].mean())
+    return {"mean_weekly_cases": mean_cases, "tier": risk.tier_name(mean_cases, vb["cutoffs"]),
+            "risk_score": float(risk.score([mean_cases], vb["ecdf"])[0]),
+            "peak_tier": risk.TIERS[int(max(risk.tier_index(fc["pred_cases"], vb["cutoffs"])))]}
+
 
 if __name__ == "__main__":
-    ward, date = sys.argv[1], sys.argv[2]
-    print(forecast(ward, date).to_string(index=False))
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--ward", required=True)
+    ap.add_argument("--date", required=True)
+    ap.add_argument("--variant", default="weather_only")
+    a = ap.parse_args()
+    ft = feature_table(a.variant)
+    row = ft[(ft.ward_id == a.ward) & (ft.date == pd.Timestamp(a.date))]
+    if row.empty:
+        raise SystemExit("ward/date not found (dates are Mondays, e.g. 2025-07-07)")
+    fc = forecast_frame(row, a.variant)
+    print(fc[["target_date", "horizon", "pred_cases", "lo", "hi", "tier", "risk_score"]].round(2).to_string(index=False))
+    print("window:", window_summary(fc, a.variant))
