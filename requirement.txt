@@ -1,0 +1,20 @@
+# Dengue Early-Warning System
+# Python 3.10 - 3.12 recommended.  Install with:  python -m pip install -r requirements.txt
+
+# Data and numerics
+pandas>=2.2
+numpy>=1.26
+openpyxl>=3.1        # read the .xlsx dataset
+pyarrow>=15          # parquet cache and test-prediction reports
+
+# Modelling
+scikit-learn>=1.4
+lightgbm>=4.3
+joblib>=1.3          # model serialization
+
+# Dashboard
+streamlit>=1.50      # needs width="stretch" support
+plotly>=5.20
+
+# Tests
+pytest>=8
