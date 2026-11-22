@@ -42,7 +42,7 @@ City corporations usually spray and clear drains only after hospital admissions 
 
 ```bash
 git clone https://github.com/ShuvankarDG/Hackathon.git
-cd <your-repo-folder>
+cd Hackathon
 
 python -m venv .venv
 ```
@@ -161,7 +161,7 @@ MAE is in cases per ward per week. Adding recent reported cases did not improve 
 
 ## AI disclosure
 
-- **AI assistants used:** Claude (Anthropic) helped design the pipeline and write code, tests and documentation. _Add any other AI tools your team used (for example ChatGPT, Copilot)._
+- **AI assistants used:** Claude (Anthropic) helped design the pipeline and write code, tests and documentation. 
 - **External APIs used at runtime:** none. The app makes no network calls and no LLM calls.
 - **Main libraries:** pandas, NumPy, scikit‑learn, LightGBM, Streamlit, Plotly, joblib, PyArrow, openpyxl.
 - **Data:** the dataset supplied by the hackathon organisers.
@@ -171,4 +171,3 @@ MAE is in cases per ward per week. Adding recent reported cases did not improve 
 | Name | GitHub | Contribution |
 | Shuvankar Das Gupta | ShuvankarDG | _e.g. feature pipeline, model training_ |
 | Md Ashraf Uddin | ashraf77uddin | _e.g. dashboard , pipeline tests_ |
-git 
